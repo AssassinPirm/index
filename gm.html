@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Игра "Вырежи слово" с Чатом GPT</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            color: blue; /* Смена цвета текста на синий */
+        }
+        h1 {
+            text-align: center;
+        }
+        #chat-container {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 20px;
+            height: 200px;
+            overflow-y: scroll;
+            color: blue; /* Смена цвета текста на синий */
+        }
+        #user-input {
+            width: 80%;
+        }
+        #send-btn {
+            width: 18%;
+        }
+        #rules {
+            margin-top: 30px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Игра "Вырежи слово" с Чатом GPT</h1>
+    <div id="chat-container"></div>
+    <input type="text" id="user-input" placeholder="Введите опорное слово" onkeypress="handleKeyPress(event)">
+    <button id="send-btn" onclick="sendMessage()">Сгенерировать предложение</button>
+
+    <div id="rules">
+        <h2>Правила игры:</h2>
+        <p>
+            При введении опорного слова ИИ будет генерировать предложение из 10 слов на тему введенного слова.
+            После этого можно ввести новое слово, и ИИ сгенерирует новое предложение.
+            Смысл предложения можно сохранить, убирая по одному слову. Заменять слова можно, но так, чтобы смысл не изменялся.
+        </p>
+    </div>
+
+    <script>
+        function sendMessage() {
+            var userInput = document.getElementById('user-input').value;
+            if (userInput.trim() !== '') {
+                appendMessage('Вы: ' + userInput);
+
+                // Вызов функции для генерации ответа от GPT
+                generateAIResponse(userInput);
+
+                // Очистка поля ввода
+                document.getElementById('user-input').value = '';
+            }
+        }
+
+        function generateAIResponse(userInput) {
+            // Замените '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' на ваш ключ API GPT-3
+            var apiKey = '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';
+            var apiUrl = 'https://api.openai.com/v1/engines/davinci/completions';
+
+            // Формирование запроса к API GPT-3
+            axios.post(apiUrl, {
+                prompt: userInput,
+                max_tokens: 50 // Максимальное количество генерируемых токенов (слов)
+            }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + apiKey
+                }
+            })
+            .then(function(response) {
+                var aiResponse = response.data.choices[0].text;
+                appendMessage('ИИ: ' + aiResponse);
+            })
+            .catch(function(error) {
+                console.error('Ошибка при запросе к API GPT-3:', error);
+            });
+        }
+
+        function appendMessage(message) {
+            var chatContainer = document.getElementById('chat-container');
+            var newMessage = document.createElement('p');
+            newMessage.textContent = message;
+            chatContainer.appendChild(newMessage);
+
+            // Прокрутка вниз для отображения последнего сообщения.
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function handleKeyPress(event) {
+            // Обработка нажатия клавиши Enter
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+    </script>
+</body>
+</html>
