@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Игра "Вырежи слово" с Чатом GPT</title>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
@@ -37,7 +37,7 @@
 <body>
     <h1>Игра "Вырежи слово" с Чатом GPT</h1>
     <div id="chat-container"></div>
-    <input type="text" id="user-input" placeholder="Введите опорное слово" onkeypress="handleKeyPress(event)">
+    <input type="text" id="user-input" placeholder="Введите опорное слово">
     <button id="send-btn" onclick="sendMessage()">Сгенерировать предложение</button>
 
     <div id="rules">
@@ -52,15 +52,10 @@
     <script>
         function sendMessage() {
             var userInput = document.getElementById('user-input').value;
-            if (userInput.trim() !== '') {
-                appendMessage('Вы: ' + userInput);
+            appendMessage('Вы: ' + userInput);
 
-                // Вызов функции для генерации ответа от GPT
-                generateAIResponse(userInput);
-
-                // Очистка поля ввода
-                document.getElementById('user-input').value = '';
-            }
+            // Вызов функции для генерации ответа от GPT
+            generateAIResponse(userInput);
         }
 
         function generateAIResponse(userInput) {
@@ -95,13 +90,6 @@
 
             // Прокрутка вниз для отображения последнего сообщения.
             chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        function handleKeyPress(event) {
-            // Обработка нажатия клавиши Enter
-            if (event.key === 'Enter') {
-                sendMessage();
-            }
         }
     </script>
 </body>
