@@ -3,94 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Игра "Вырежи слово" с Чатом GPT</title>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <title>Runner Game</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            color: blue; /* Смена цвета текста на синий */
+            margin: 0;
+            overflow: hidden;
+            background-color: #87CEEB; /* Цвет неба */
         }
-        h1 {
-            text-align: center;
-        }
-        #chat-container {
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin-top: 20px;
-            height: 200px;
-            overflow-y: scroll;
-            color: blue; /* Смена цвета текста на синий */
-        }
-        #user-input {
-            width: 80%;
-        }
-        #send-btn {
-            width: 18%;
-        }
-        #rules {
-            margin-top: 30px;
-            font-weight: bold;
+
+        canvas {
+            display: block;
         }
     </style>
 </head>
 <body>
-    <h1>Игра "Вырежи слово" с Чатом GPT</h1>
-    <div id="chat-container"></div>
-    <input type="text" id="user-input" placeholder="Введите опорное слово">
-    <button id="send-btn" onclick="sendMessage()">Сгенерировать предложение</button>
-
-    <div id="rules">
-        <h2>Правила игры:</h2>
-        <p>
-            При введении опорного слова ИИ будет генерировать предложение из 10 слов на тему введенного слова.
-            После этого можно ввести новое слово, и ИИ сгенерирует новое предложение.
-            Смысл предложения можно сохранить, убирая по одному слову. Заменять слова можно, но так, чтобы смысл не изменялся.
-        </p>
-    </div>
+    <canvas id="gameCanvas"></canvas>
 
     <script>
-        function sendMessage() {
-            var userInput = document.getElementById('user-input').value;
-            appendMessage('Вы: ' + userInput);
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
 
-            // Вызов функции для генерации ответа от GPT
-            generateAIResponse(userInput);
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height - 30,
+            width: 30,
+            height: 30,
+            color: "blue",
+            speed: 5,
+            dx: 0,
+            dy: 0
+        };
+
+        const teacher = {
+            x: canvas.width / 2,
+            y: 0,
+            width: 30,
+            height: 30,
+            color: "red",
+            speed: 2
+        };
+
+        const trees = [];
+
+        function generateTrees() {
+            for (let i = 0; i < 20; i++) {
+                const tree = {
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * (canvas.height - 100),
+                    width: 50 + Math.random() * 50,
+                    height: 100 + Math.random() * 50,
+                    color: "green"
+                };
+                trees.push(tree);
+            }
         }
 
-        function generateAIResponse(userInput) {
-            // Замените '' на ваш ключ API GPT-3
-            var apiKey = '';
-            var apiUrl = 'https://api.openai.com/v1/engines/davinci/completions';
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Формирование запроса к API GPT-3
-            axios.post(apiUrl, {
-                prompt: userInput,
-                max_tokens: 50 // Максимальное количество генерируемых токенов (слов)
-            }, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + apiKey
+            // Draw background trees
+            for (const tree of trees) {
+                ctx.fillStyle = tree.color;
+                ctx.beginPath();
+                ctx.arc(tree.x, tree.y, tree.width / 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Draw player
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            // Draw teacher
+            ctx.fillStyle = teacher.color;
+            ctx.fillRect(teacher.x, teacher.y, teacher.width, teacher.height);
+
+            requestAnimationFrame(draw);
+        }
+
+        function update() {
+            // Move player with arrow keys
+            document.addEventListener("keydown", function (event) {
+                switch (event.key) {
+                    case "ArrowUp":
+                        player.dy = -player.speed;
+                        break;
+                    case "ArrowDown":
+                        player.dy = player.speed;
+                        break;
+                    case "ArrowLeft":
+                        player.dx = -player.speed;
+                        break;
+                    case "ArrowRight":
+                        player.dx = player.speed;
+                        break;
                 }
-            })
-            .then(function(response) {
-                var aiResponse = response.data.choices[0].text;
-                appendMessage('ИИ: ' + aiResponse);
-            })
-            .catch(function(error) {
-                console.error('Ошибка при запросе к API GPT-3:', error);
             });
+
+            document.addEventListener("keyup", function (event) {
+                switch (event.key) {
+                    case "ArrowUp":
+                    case "ArrowDown":
+                        player.dy = 0;
+                        break;
+                    case "ArrowLeft":
+                    case "ArrowRight":
+                        player.dx = 0;
+                        break;
+                }
+            });
+
+            // Move player
+            player.x += player.dx;
+            player.y += player.dy;
+
+            // Move teacher towards the player
+            if (teacher.y < player.y) {
+                teacher.y += teacher.speed;
+            } else {
+                teacher.y -= teacher.speed;
+            }
+
+            if (teacher.x < player.x) {
+                teacher.x += teacher.speed;
+            } else {
+                teacher.x -= teacher.speed;
+            }
+
+            // Check collision with teacher
+            if (
+                player.x < teacher.x + teacher.width &&
+                player.x + player.width > teacher.x &&
+                player.y < teacher.y + teacher.height &&
+                player.y + player.height > teacher.y
+            ) {
+                alert("Game Over! You got caught by the teacher. Press 'R' to restart.");
+                document.location.reload();
+            }
+
+            requestAnimationFrame(update);
         }
 
-        function appendMessage(message) {
-            var chatContainer = document.getElementById('chat-container');
-            var newMessage = document.createElement('p');
-            newMessage.textContent = message;
-            chatContainer.appendChild(newMessage);
-
-            // Прокрутка вниз для отображения последнего сообщения.
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+        function startGame() {
+            generateTrees();
+            draw();
+            update();
         }
+
+        startGame();
     </script>
 </body>
 </html>
